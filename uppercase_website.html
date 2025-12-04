@@ -29,17 +29,14 @@
     <header>
       <div>
         <h1>Upper Upper — Konversi ke HURUF BESAR</h1>
-        <p class="lead">Masukkan teks di kiri — klik <strong>UPPERCASE</strong> untuk mengubah semua huruf menjadi kapital, lalu salin atau unduh sebagai file .doc.</p>
-      </div>
-      <div>
-        <small>Simple & bebas biaya</small>
+        <p class="lead">Masukkan teks di kiri, lalu klik UPPERCASE untuk mengubah huruf menjadi kapital.</p>
       </div>
     </header>
 
     <div class="grid">
       <div>
         <div class="controls">
-          <select id="fontSelect" title="Pilih font">
+          <select id="fontSelect">
             <option value="Arial, sans-serif">Arial</option>
             <option value="Times New Roman, serif">Times New Roman</option>
             <option value="Georgia, serif">Georgia</option>
@@ -53,7 +50,7 @@
           </label>
 
           <button id="upperBtn">UPPERCASE</button>
-          <button class="ghost" id="titleBtn">TITLE Case</button>
+          <button class="ghost" id="titleBtn">Title Case</button>
           <button class="ghost" id="clearBtn">Bersihkan</button>
         </div>
 
@@ -64,19 +61,16 @@
           <button id="downloadDocBtn">Unduh .doc</button>
           <button id="downloadTxtBtn" class="ghost">Unduh .txt</button>
         </div>
-        <small>Tip: tekan <strong>Ctrl+A</strong> + <strong>Ctrl+C</strong> untuk memilih & menyalin cepat.</small>
       </div>
 
       <aside>
         <label style="font-weight:600;display:block;margin-bottom:8px">Pratinjau</label>
         <div id="preview" class="preview"></div>
-        <footer>Hasil pratinjau akan mengikuti pemilihan font & ukuran.</footer>
       </aside>
     </div>
   </div>
 
   <script>
-    // Element references
     const input = document.getElementById('inputText');
     const preview = document.getElementById('preview');
     const upperBtn = document.getElementById('upperBtn');
@@ -88,7 +82,6 @@
     const titleBtn = document.getElementById('titleBtn');
     const clearBtn = document.getElementById('clearBtn');
 
-    // Update preview styling
     function applyPreviewStyle(){
       preview.style.fontFamily = fontSelect.value;
       preview.style.fontSize = fontSize.value + 'px';
@@ -97,74 +90,63 @@
     fontSelect.addEventListener('change', applyPreviewStyle);
     fontSize.addEventListener('input', applyPreviewStyle);
 
-    // Sync preview with input
     function syncPreview(){
-      // escape HTML
-      const safe = input.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      const safe = input.value.replace(/&/g,'&amp;')
+                              .replace(/</g,'&lt;')
+                              .replace(/>/g,'&gt;')
+                              .replace(/\n/g,'<br>');
       preview.innerHTML = safe;
     }
 
     input.addEventListener('input', syncPreview);
     applyPreviewStyle();
 
-    // Convert to uppercase
     upperBtn.addEventListener('click', ()=>{
       input.value = input.value.toUpperCase();
       syncPreview();
-      input.focus();
     });
 
-    // Title Case (kata kapital di awal)
     titleBtn.addEventListener('click', ()=>{
-      input.value = input.value.toLowerCase().split(/(\s+)/).map(word => {
-        // Keep whitespace tokens
+      input.value = input.value.toLowerCase().split(/(\s+)/).map(word=>{
         if(/\s+/.test(word)) return word;
         return word.charAt(0).toUpperCase() + word.slice(1);
       }).join('');
       syncPreview();
-      input.focus();
     });
 
     clearBtn.addEventListener('click', ()=>{
       input.value = '';
       syncPreview();
-      input.focus();
-    })
-
-    // Copy to clipboard
-    copyBtn.addEventListener('click', async ()=>{
-      try{
-        await navigator.clipboard.writeText(input.value);
-        copyBtn.textContent = 'Tersalin!';
-        setTimeout(()=> copyBtn.textContent = 'Salin',1200);
-      }catch(e){
-        alert('Tidak bisa menyalin otomatis — silakan salin manual.');
-      }
     });
 
-    // Download helpers
+    copyBtn.addEventListener('click', async ()=>{
+      await navigator.clipboard.writeText(input.value);
+      copyBtn.textContent = 'Tersalin!';
+      setTimeout(()=> copyBtn.textContent = 'Salin',1200);
+    });
+
     function downloadBlob(filename, mime, content){
       const blob = new Blob([content], {type: mime});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = filename; document.body.appendChild(a); a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 3000);
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 2000);
     }
 
     downloadTxtBtn.addEventListener('click', ()=>{
       downloadBlob('hasil.txt','text/plain;charset=utf-8', input.value);
     });
 
-    // Simple .doc download (MS Word can open plain HTML inside .doc file)
     downloadDocBtn.addEventListener('click', ()=>{
-      const header = `<!doctype html><html><head><meta charset=\"utf-8\"></head><body>`;
-      const footer = `</body></html>`;
-      const body = input.value.replace(/\n/g,'<br>');
-      const html = header + '<div style="font-family:' + fontSelect.value + '; font-size:' + fontSize.value + 'px">' + body + '</div>' + footer;
+      const html =
+        `<!doctype html><html><head><meta charset='utf-8'></head><body>` +
+        `<div style="font-family:${fontSelect.value}; font-size:${fontSize.value}px">` +
+        input.value.replace(/\n/g,'<br>') +
+        `</div></body></html>`;
       downloadBlob('hasil.doc','application/msword', html);
     });
-
-    // initialise
+    
     input.value = '';
     syncPreview();
   </script>
