@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upper Upper — Konversi ke HURUF BESAR</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#ffffff;--accent:#2563eb;--muted:#6b7280}
+    *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{margin:0;background:linear-gradient(180deg,#eef2ff, #f8fafc);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .card{width:100%;max-width:980px;background:var(--card);border-radius:12px;box-shadow:0 8px 30px rgba(17,24,39,0.06);padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    textarea{width:100%;min-height:220px;border:1px solid #e6e9ef;border-radius:8px;padding:12px;font-size:15px;resize:vertical}
+    .preview{min-height:220px;border-radius:8px;border:1px dashed #e6e9ef;padding:12px;background:#fbfdff;overflow:auto}
+    select,input[type=range]{padding:8px;border-radius:8px;border:1px solid #e6e9ef}
+    button{background:var(--accent);color:white;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.14)}
+    small{display:block;color:var(--muted);margin-top:8px}
+    footer{margin-top:12px;text-align:right;color:var(--muted);font-size:13px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr;}.preview{min-height:160px}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div>
+        <h1>Upper Upper — Konversi ke HURUF BESAR</h1>
+        <p class="lead">Masukkan teks di kiri — klik <strong>UPPERCASE</strong> untuk mengubah semua huruf menjadi kapital, lalu salin atau unduh sebagai file .doc.</p>
+      </div>
+      <div>
+        <small>Simple & bebas biaya</small>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <div class="controls">
+          <select id="fontSelect" title="Pilih font">
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="Times New Roman, serif">Times New Roman</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Verdana, sans-serif">Verdana</option>
+            <option value="'Courier New', monospace">Courier New</option>
+          </select>
+
+          <label style="display:flex;align-items:center;gap:8px">
+            Ukuran
+            <input id="fontSize" type="range" min="12" max="40" value="16">
+          </label>
+
+          <button id="upperBtn">UPPERCASE</button>
+          <button class="ghost" id="titleBtn">TITLE Case</button>
+          <button class="ghost" id="clearBtn">Bersihkan</button>
+        </div>
+
+        <textarea id="inputText" placeholder="Ketik atau tempel teks di sini..."></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="copyBtn" class="ghost">Salin</button>
+          <button id="downloadDocBtn">Unduh .doc</button>
+          <button id="downloadTxtBtn" class="ghost">Unduh .txt</button>
+        </div>
+        <small>Tip: tekan <strong>Ctrl+A</strong> + <strong>Ctrl+C</strong> untuk memilih & menyalin cepat.</small>
+      </div>
+
+      <aside>
+        <label style="font-weight:600;display:block;margin-bottom:8px">Pratinjau</label>
+        <div id="preview" class="preview"></div>
+        <footer>Hasil pratinjau akan mengikuti pemilihan font & ukuran.</footer>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Element references
+    const input = document.getElementById('inputText');
+    const preview = document.getElementById('preview');
+    const upperBtn = document.getElementById('upperBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadDocBtn = document.getElementById('downloadDocBtn');
+    const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+    const fontSelect = document.getElementById('fontSelect');
+    const fontSize = document.getElementById('fontSize');
+    const titleBtn = document.getElementById('titleBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Update preview styling
+    function applyPreviewStyle(){
+      preview.style.fontFamily = fontSelect.value;
+      preview.style.fontSize = fontSize.value + 'px';
+    }
+
+    fontSelect.addEventListener('change', applyPreviewStyle);
+    fontSize.addEventListener('input', applyPreviewStyle);
+
+    // Sync preview with input
+    function syncPreview(){
+      // escape HTML
+      const safe = input.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      preview.innerHTML = safe;
+    }
+
+    input.addEventListener('input', syncPreview);
+    applyPreviewStyle();
+
+    // Convert to uppercase
+    upperBtn.addEventListener('click', ()=>{
+      input.value = input.value.toUpperCase();
+      syncPreview();
+      input.focus();
+    });
+
+    // Title Case (kata kapital di awal)
+    titleBtn.addEventListener('click', ()=>{
+      input.value = input.value.toLowerCase().split(/(\s+)/).map(word => {
+        // Keep whitespace tokens
+        if(/\s+/.test(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join('');
+      syncPreview();
+      input.focus();
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      input.value = '';
+      syncPreview();
+      input.focus();
+    })
+
+    // Copy to clipboard
+    copyBtn.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(input.value);
+        copyBtn.textContent = 'Tersalin!';
+        setTimeout(()=> copyBtn.textContent = 'Salin',1200);
+      }catch(e){
+        alert('Tidak bisa menyalin otomatis — silakan salin manual.');
+      }
+    });
+
+    // Download helpers
+    function downloadBlob(filename, mime, content){
+      const blob = new Blob([content], {type: mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 3000);
+    }
+
+    downloadTxtBtn.addEventListener('click', ()=>{
+      downloadBlob('hasil.txt','text/plain;charset=utf-8', input.value);
+    });
+
+    // Simple .doc download (MS Word can open plain HTML inside .doc file)
+    downloadDocBtn.addEventListener('click', ()=>{
+      const header = `<!doctype html><html><head><meta charset=\"utf-8\"></head><body>`;
+      const footer = `</body></html>`;
+      const body = input.value.replace(/\n/g,'<br>');
+      const html = header + '<div style="font-family:' + fontSelect.value + '; font-size:' + fontSize.value + 'px">' + body + '</div>' + footer;
+      downloadBlob('hasil.doc','application/msword', html);
+    });
+
+    // initialise
+    input.value = '';
+    syncPreview();
+  </script>
+</body>
+</html>
